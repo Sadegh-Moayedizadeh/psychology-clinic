@@ -1,6 +1,9 @@
 import os
 
-from django.shortcuts import render
+from django.http import Http404
+from django.shortcuts import render, redirect
+from homepage.forms import ContentForm
+
 
 def homepage(request):
     content_directory = 'clinic/homepage/content'
@@ -15,3 +18,25 @@ def homepage(request):
                 content_data[key] = content
 
     return render(request, 'index.html', content_data)
+
+
+def edit_content(request, title):
+    content_directory = 'clinic/homepage/content'
+    if (title + ".txt") not in os.listdir(content_directory):
+        return Http404("The content with this title does not exist.")
+    content_file_path = content_directory + f"/{title}.txt"
+
+    if request.method == 'POST':
+        form = ContentForm(request.POST)
+        if form.is_valid():
+            content = form.cleaned_data['content']
+            with open(content_file_path, "w") as file:
+                file.write(content)
+            return redirect('homepage')
+    else:
+        with open(content_file_path, "r") as file:
+            default_content = file.read()
+        initial_data = {'name': title, 'content': default_content}
+        form = ContentForm(initial=initial_data)
+
+    return render(request, 'edit.html', {'form': form})
