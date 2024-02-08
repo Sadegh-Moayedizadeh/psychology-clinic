@@ -2,6 +2,7 @@ import os
 
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from homepage.forms import ContentForm
 
 
@@ -40,3 +41,20 @@ def edit_content(request, title):
         form = ContentForm(initial=initial_data)
 
     return render(request, "edit.html", {"form": form})
+
+
+def get_edit_list(request):
+    current_url = reverse("edit_list")
+    urls = []
+    content_directory = "clinic/homepage/content"
+    for filename in os.listdir(content_directory):
+        filename_whithout_extension = os.path.splitext(filename)[0]
+        urls.append(
+            (
+                request.build_absolute_uri("/")
+                + current_url
+                + filename_whithout_extension,
+                filename_whithout_extension,
+            )
+        )
+    return render(request, "edit_list.html", {"urls": urls})
